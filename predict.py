@@ -1,3 +1,5 @@
+import os
+import subprocess
 import time
 from collections import OrderedDict
 from typing import Any, List, Optional
@@ -20,13 +22,7 @@ DEFAULT_MODEL = "stabilityai/stablelm-tuned-alpha-7b"
 CACHE_DIR = "pretrained_weights"
 TOKENIZER_PATH = "./tokenizer"
 
-# To download tensorizer weights instead of load them from a local source, `REMOTE_PATH_TO_TENSORIZER_WEIGHTS` to their URL
-REMOTE_PATH_TO_TENSORIZER_WEIGHTS = None
-PATH_TO_TENSORIZER_WEIGHTS = (
-    REMOTE_PATH_TO_TENSORIZER_WEIGHTS
-    if REMOTE_PATH_TO_TENSORIZER_WEIGHTS
-    else "./tensorized_models/stabilityai/stablelm-tuned-alpha-7b.tensors"
-)
+TENSORIZER_WEIGHTS_PATH = "gs://replicate-weights/stablelm-tuned-alpha-7b.tensors"
 
 SYSTEM_PROMPT = """<|SYSTEM|># StableLM Tuned (Alpha version)
 - StableLM is a helpful and harmless open-source AI language model developed by StabilityAI.
@@ -47,13 +43,23 @@ class StopOnTokens(StoppingCriteria):
         return False
 
 
+def maybe_download(path):
+    if path.startswith("gs://"):
+        output_path = "/tmp/weights.tensors"
+        subprocess.check_call(["gcloud", "storage", "cp", path, output_path])
+        return output_path
+    return path
+
+
 class Predictor(BasePredictor):
     def setup(self, weights: Optional[Path] = None):
         if weights is not None and weights.name == "weights":
             weights = None
-        if weights is None and PATH_TO_TENSORIZER_WEIGHTS:
+        if weights is None and TENSORIZER_WEIGHTS_PATH:
             print("Loading tensorized weights from public path")
-            self.model = self.load_tensorizer(weights=PATH_TO_TENSORIZER_WEIGHTS)
+            self.model = self.load_tensorizer(
+                weights=maybe_download(TENSORIZER_WEIGHTS_PATH)
+            )
 
         elif (hasattr(weights, "filename") and "tensors" in weights.filename) or str(
             weights
@@ -64,8 +70,9 @@ class Predictor(BasePredictor):
 
         self.tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_PATH)
         self.stop = StopOnTokens()
-        self.generator = pipeline('text-generation', model=self.model, tokenizer=self.tokenizer, device=0)
-
+        self.generator = pipeline(
+            "text-generation", model=self.model, tokenizer=self.tokenizer, device=0
+        )
 
     def load_huggingface_model(self, weights=None):
         st = time.time()
@@ -96,7 +103,7 @@ class Predictor(BasePredictor):
         prompt: str = Input(
             description=f"Input Prompt.", default="What's your mood today?"
         ),
-        max_new_tokens: int = Input(
+        max_tokens: int = Input(
             description="Maximum number of tokens to generate. A word is generally 2-3 tokens",
             ge=1,
             default=100,
@@ -125,7 +132,7 @@ class Predictor(BasePredictor):
 
         result = self.generator(
             prompt_text,
-            max_new_tokens=max_new_tokens,
+            max_new_tokens=max_tokens,
             num_return_sequences=1,
             num_beams=1,
             do_sample=True,
