@@ -1,6 +1,6 @@
 # Cog StableLM
 
-[![Replicate](https://replicate.com/replicate/stablelm/badge)](https://replicate.com/replicate/stablelm)
+[![Replicate](https://replicate.com/stability-ai/stablelm-tuned-alpha-7b/badge)](https://replicate.com/stability-ai/stablelm-tuned-alpha-7b)
 
 This repository is an implementation of [StableLM](https://github.com/Stability-AI/StableLM) as a Cog model. [Cog packages machine learning models as standard containers.](https://github.com/replicate/cog).
 
@@ -8,7 +8,7 @@ This repository is an implementation of [StableLM](https://github.com/Stability-
 
 * Model weights.
 
-* GPU machine. You'll need a Linux machine with an NVIDIA GPU attached and the NVIDIA Container Toolkit installed. If you don't already have access to a machine with a GPU, check out our guide to getting a GPU machine. This codebase currently assumes a single device with sufficient VRAM (>24GB) is available. If, instead, you have access to a multi-device environment, you can modify the code to distribute your model across devices.
+* GPU machine. You'll need a Linux machine with an NVIDIA GPU attached, and the NVIDIA Container Toolkit installed. If you don't already have access to a machine with a GPU, check out our guide to getting a GPU machine. This codebase currently assumes a single device with sufficient VRAM (>24GB) is available. If, instead, you have access to a multi-device environment, you can modify the code to distribute your model across devices.
 
 * Docker. You'll be using the Cog command-line tool to build and push a model. Cog uses Docker to create containers for models.
 
@@ -16,7 +16,7 @@ This repository is an implementation of [StableLM](https://github.com/Stability-
 
 First, [install Cog](https://github.com/replicate/cog#install):
 
-```
+```bash
 curl -o /usr/local/bin/cog -L "https://github.com/replicate/cog/releases/download/v0.7.0-beta17/cog_Linux_x86_64"
 sudo chmod +x /usr/local/bin/cog
 ```
@@ -26,7 +26,7 @@ sudo chmod +x /usr/local/bin/cog
 
 You can run the model locally to test it:
 
-```
+```bash
 cog predict -i prompt="What is a meme, and what's the history behind this word?"
 ```
 
@@ -46,13 +46,13 @@ Click on the "Settings" tab on your model page, scroll down to "GPU hardware", a
 
 Log in to Replicate:
 
-```
+```bash
 cog login
 ```
 
 Push the contents of your current directory to Replicate, using the model name you specified in step 3:
 
-```
+```bash
 cog push r8.im/username/modelname
 ```
 
