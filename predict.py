@@ -24,7 +24,7 @@ TOKENIZER_PATH = "./tokenizer"
 
 TENSORIZER_WEIGHTS_PATH = "gs://replicate-weights/stablelm-tuned-alpha-7b.tensors"
 
-SYSTEM_PROMPT = """<|SYSTEM|># StableLM Tuned (Alpha version)
+SYSTEM_PROMPT = """# StableLM Tuned (Alpha version)
 - StableLM is a helpful and harmless open-source AI language model developed by StabilityAI.
 - StableLM is excited to be able to help the user, but will refuse to do anything that could be considered harmful to the user.
 - StableLM is more than just an information source, StableLM is also able to write poetry, short stories, and make jokes.
@@ -103,6 +103,9 @@ class Predictor(BasePredictor):
         prompt: str = Input(
             description=f"Input Prompt.", default="What's your mood today?"
         ),
+        instructions: str = Input(
+            description=f"Instructions Prompt.", default=SYSTEM_PROMPT
+        ),
         max_tokens: int = Input(
             description="Maximum number of tokens to generate. A word is generally 2-3 tokens",
             ge=1,
@@ -128,7 +131,7 @@ class Predictor(BasePredictor):
         ),
     ) -> str:
 
-        prompt_text = f"{SYSTEM_PROMPT}<|USER|>{prompt}<|ASSISTANT|>"
+        prompt_text = f"<|SYSTEM|>{instructions}<|USER|>{prompt}<|ASSISTANT|>"
 
         result = self.generator(
             prompt_text,
